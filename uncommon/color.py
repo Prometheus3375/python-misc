@@ -50,13 +50,13 @@ class Color:
         return f'{self.__class__.__name__}(red={self.red}, green={self.green}, blue={self.blue}, alpha={self.alpha})'
 
     def __eq__(self, other, /):
-        if isinstance(other, self.__class__):
+        if isinstance(other, Color):
             return self._argb == other._argb
 
         return NotImplemented
 
     def __ne__(self, other, /):
-        if isinstance(other, self.__class__):
+        if isinstance(other, Color):
             return self._argb != other._argb
 
         return NotImplemented
@@ -69,19 +69,19 @@ class Color:
 
     @property
     def alpha_p(self, /):
-        return self.alpha * 100 / 255
+        return self.alpha / 255
 
     @property
     def red_p(self, /):
-        return self.red * 100 / 255
+        return self.red / 255
 
     @property
     def green_p(self, /):
-        return self.green * 100 / 255
+        return self.green / 255
 
     @property
     def blue_p(self, /):
-        return self.blue * 100 / 255
+        return self.blue / 255
 
     def to_tuple(self, /):
         return self.red, self.green, self.blue, self.alpha
@@ -92,13 +92,13 @@ class Color:
         return {'red': self.red, 'green': self.green, 'blue': self.blue, 'alpha': self.alpha}
 
     @classmethod
-    def from_hex(cls, /, hex_: str, alpha: int = 255):
+    def from_hex(cls, /, hex: str, alpha: int = 255):
         if len(str) == 8:
-            alpha = int(hex_[6:], 16)
+            alpha = int(hex[6:8], 16)
         elif len(str) != 6:
             raise ValueError(f'length of hex string must be 6 or 8, got {len(str)}')
 
-        return cls(int(hex_[:2], 16), int(hex_[2:4], 16), int(hex_[4:6], 16), alpha)
+        return cls(int(hex[0:2], 16), int(hex[2:4], 16), int(hex[4:6], 16), alpha)
 
     @property
     def hex(self, /):
@@ -120,7 +120,7 @@ class Color:
     @property
     def hsv(self, /):
         # https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
-        comp = self.red_p, self.green_p, self.blue_p
+        comp = self.red_p * 100., self.green_p * 100., self.blue_p * 100.
         sort, idx = extended.sorted(comp)
         min_, _, max_ = sort
         max_idx = idx[2]
@@ -146,7 +146,7 @@ class Color:
     @property
     def hsl(self, /):
         # https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
-        comp = self.red_p, self.green_p, self.blue_p
+        comp = self.red_p * 100., self.green_p * 100., self.blue_p * 100.
         sort, idx = extended.sorted(comp)
         min_, _, max_ = sort
         max_idx = idx[2]
