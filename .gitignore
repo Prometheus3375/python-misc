@@ -1,0 +1,6 @@
+# PyCharm
+.idea/
+
+# Common
+__pycache__/
+venv/
