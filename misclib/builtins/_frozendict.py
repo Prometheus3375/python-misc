@@ -3,7 +3,7 @@ from itertools import chain
 from sys import getsizeof
 from typing import Generic, Optional, TypeVar, Union, overload
 
-from .typing import SupportsKeysAndGetItem
+from .._typing import SupportsKeysAndGetItem
 
 K_co = TypeVar('K_co', covariant=True)
 V_co = TypeVar('V_co', covariant=True)

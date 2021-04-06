@@ -1,2 +1,2 @@
-from ._frozendict import frozendict
+from .builtins import frozendict
 from .functions import *
