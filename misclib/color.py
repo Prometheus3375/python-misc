@@ -28,19 +28,23 @@ class Color:
         self._argb = (255 - alpha << 24) + (red << 16) + (green << 8) + blue
 
     @property
-    def alpha(self, /):
+    def alpha(self, /) -> int:
+        """Alpha in range 0 - 255"""
         return 255 - (self._argb >> 24)
 
     @property
-    def red(self, /):
+    def red(self, /) -> int:
+        """Red in range 0 - 255"""
         return self._argb >> 16 & 255
 
     @property
-    def green(self, /):
+    def green(self, /) -> int:
+        """Green in range 0 - 255"""
         return self._argb >> 8 & 255
 
     @property
-    def blue(self, /):
+    def blue(self, /) -> int:
+        """Blue in range 0 - 255"""
         return self._argb & 255
 
     def __str__(self, /):
@@ -68,20 +72,44 @@ class Color:
         return object.__sizeof__(self) + self._argb.__sizeof__()
 
     @property
-    def alpha_p(self, /):
+    def alpha_f(self, /) -> float:
+        """Alpha in range [0, 1]"""
         return self.alpha / 255
 
     @property
-    def red_p(self, /):
+    def red_f(self, /) -> float:
+        """Red in range [0, 1]"""
         return self.red / 255
 
     @property
-    def green_p(self, /):
+    def green_f(self, /) -> float:
+        """Green in range [0, 1]"""
         return self.green / 255
 
     @property
-    def blue_p(self, /):
+    def blue_f(self, /) -> float:
+        """Blue in range [0, 1]"""
         return self.blue / 255
+
+    @property
+    def alpha_p(self, /) -> float:
+        """Alpha in range [0, 100]"""
+        return self.alpha * 100 / 255
+
+    @property
+    def red_p(self, /) -> float:
+        """Red in range [0, 100]"""
+        return self.red * 100 / 255
+
+    @property
+    def green_p(self, /) -> float:
+        """Green in range [0, 100]"""
+        return self.green * 100 / 255
+
+    @property
+    def blue_p(self, /) -> float:
+        """Blue in range [0, 100]"""
+        return self.blue * 100 / 255
 
     def to_tuple(self, /):
         return self.red, self.green, self.blue, self.alpha
@@ -120,7 +148,7 @@ class Color:
     @property
     def hsv(self, /):
         # https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
-        comp = self.red_p * 100., self.green_p * 100., self.blue_p * 100.
+        comp = self.red_p, self.green_p, self.blue_p
         sort, idx = extended.sorted(comp)
         min_, _, max_ = sort
         max_idx = idx[2]
@@ -146,7 +174,7 @@ class Color:
     @property
     def hsl(self, /):
         # https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
-        comp = self.red_p * 100., self.green_p * 100., self.blue_p * 100.
+        comp = self.red_p, self.green_p, self.blue_p
         sort, idx = extended.sorted(comp)
         min_, _, max_ = sort
         max_idx = idx[2]
