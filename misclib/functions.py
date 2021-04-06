@@ -18,23 +18,6 @@ def except_(smth: Callable[..., Any], *args, **kwargs):
         print(exc2str(e))
 
 
-def isnamedtuplesubclass(cls: type) -> bool:
-    # https://stackoverflow.com/a/2166841
-    bases = cls.__bases__
-    if len(bases) != 1 or bases[0] is not tuple:
-        return False
-
-    fields = getattr(cls, '_fields', None)
-    if not isinstance(fields, tuple):
-        return False
-
-    return all(type(n) is str for n in fields)
-
-
-def isnamedtuple(obj: tuple) -> bool:
-    return isnamedtuplesubclass(obj.__class__)
-
-
 def truncate_string(s: str, max_len: int = 10) -> str:
     return s if len(s) <= max_len else f'{s[:max_len - 3]}...'
 
@@ -45,4 +28,4 @@ def repr_collection(c: Collection, singular: _IterableStr, plural: _IterableStr,
     return singular if len(c) == 1 else plural, delimiter.join(func(o) for o in c)
 
 
-__all__ = 'exc2str', 'except_', 'isnamedtuplesubclass', 'isnamedtuple', 'truncate_string', 'repr_collection'
+__all__ = 'exc2str', 'except_', 'truncate_string', 'repr_collection'
