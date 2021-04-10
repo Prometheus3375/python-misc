@@ -1,4 +1,4 @@
-from . import builtins
+from .. import builtins
 
 
 def _hsv2rgb_helper(n: int, h: int, a: int, v: int, /) -> int:
@@ -221,3 +221,5 @@ class Color:
 # print(f'{c!r}')
 # print(f'{c.hsv}')
 # print(f'{c.hsl}')
+
+__all__ = 'Color',
