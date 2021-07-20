@@ -4,31 +4,21 @@ from typing import Generic, Iterable, Iterator, Optional, TypeVar, Union, overlo
 
 T1 = TypeVar('T1')
 T2 = TypeVar('T2')
-KV = Union[T1, T2]
-Tup = tuple[T1, T2]
+V = Union[T1, T2]
+P = tuple[T1, T2]
 
 T1_co = TypeVar('T1_co', covariant=True)
 T2_co = TypeVar('T2_co', covariant=True)
-KV_co = Union[T1_co, T2_co]
-Tup_co = tuple[T1_co, T2_co]
+V_co = Union[T1_co, T2_co]
+P_co = tuple[T1_co, T2_co]
 
 T = TypeVar('T')
 
-
-def unique_pairs(iterable: Iterable[Tup], mapping: dict = None, /) -> dict[KV, KV]:
-    d = {} if mapping is None else mapping
-    default = object()
-    for value1, value2 in iterable:
-        d.pop(d.pop(value1, default), default)
-        d.pop(d.pop(value2, default), default)
-        d[value1] = value2
-        d[value2] = value1
-
-    return d
+dummy = object()
 
 
 @MappingView.register
-class PairsView(Generic[T1, T2], Set[Tup]):
+class PairsView(Generic[T1, T2], Set[P]):
     __slots__ = '_source',
 
     def __init__(self, source: 'AbstractBijectiveMap[T1, T2]', /):
@@ -37,15 +27,17 @@ class PairsView(Generic[T1, T2], Set[Tup]):
     def __len__(self, /):
         return len(self._source) // 2
 
-    def __contains__(self, pair: Tup, /):
-        return pair[0] == self._source.get(pair[1], object())
+    def __contains__(self, pair: P, /):
+        o = pair[0]
+        os = self._source.get(pair[1], dummy)
+        return o is os or o == os
 
-    def __iter__(self, /) -> Iterator[Tup]:
+    def __iter__(self, /) -> Iterator[P]:
         items = iter(self._source.items())
         for pair, _ in zip(items, items):
             yield pair
 
-    def __reversed__(self, /) -> Iterator[Tup]:
+    def __reversed__(self, /) -> Iterator[P]:
         items = reversed(self._source.items())
         for _, pair in zip(items, items):
             yield pair
@@ -54,15 +46,37 @@ class PairsView(Generic[T1, T2], Set[Tup]):
         return f'{self.__class__.__name__}({self._source!r})'
 
 
+def unique_pairs(iterable: Iterable[P], mapping: dict = None, /) -> dict[V, V]:
+    d = {} if mapping is None else mapping
+    for value1, value2 in iterable:
+        d.pop(d.pop(value1, dummy), dummy)
+        d.pop(d.pop(value2, dummy), dummy)
+        d[value1] = value2
+        d[value2] = value1
+
+    return d
+
+
 @Mapping.register
 class AbstractBijectiveMap(Generic[T1, T2]):
     __slots__ = '_data',
 
-    def __init__(self, iterable: Iterable[Tup] = (), /):
-        self._data: dict[KV, KV] = unique_pairs(iterable)
+    @overload
+    def __init__(self, mapping: Mapping[T1, T2], /): ...
+    @overload
+    def __init__(self, iterable: Iterable[P], /): ...
+    @overload
+    def __init__(self, /): ...
+
+    def __init__(self, data=(), /):
+        iterable = data.items() if isinstance(data, Mapping) else data
+        self._data: dict[V, V] = unique_pairs(iterable)
 
     def __new__(cls, /, *args, **kwargs):
-        raise TypeError(f'cannot instantiate abstract class {AbstractBijectiveMap.__name__}')
+        if cls is AbstractBijectiveMap:
+            raise TypeError(f'cannot instantiate abstract class {AbstractBijectiveMap.__name__}')
+
+        return object.__new__(cls)
 
     def __len__(self, /):
         return len(self._data)
@@ -75,7 +89,7 @@ class AbstractBijectiveMap(Generic[T1, T2]):
     def __getitem__(self, value, /):
         return self._data[value]
 
-    def __contains__(self, value: KV, /):
+    def __contains__(self, value: V, /):
         return value in self._data
 
     def __iter__(self, /):
@@ -119,12 +133,12 @@ class AbstractBijectiveMap(Generic[T1, T2]):
         return f'{self.__class__.__name__}({self})'
 
     def __eq__(self, other, /):
-        return self._data == other
+        return self is other or self._data == other
 
     def __ne__(self, other, /):
-        return self._data != other
+        return self is not other and self._data != other
 
-    def __getnewargs__(self, /) -> tuple[Tup, ...]:
+    def __getnewargs__(self, /) -> tuple[P, ...]:
         return tuple(self.pairs())
 
     def __sizeof__(self, /):
