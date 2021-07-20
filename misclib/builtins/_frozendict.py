@@ -48,7 +48,6 @@ class frozendict(Generic[K_co, V_co]):
 
     @classmethod
     def fromkeys(cls, iterable: Iterable, value=None, /):
-        # noinspection PyArgumentList
         return cls((k, value) for k in iterable)
 
     def keys(self, /) -> KeysView[K_co]:
@@ -61,7 +60,6 @@ class frozendict(Generic[K_co, V_co]):
         return self._source.items()
 
     def copy(self, /):
-        # noinspection PyArgumentList
         return self.__class__(self._source)
 
     def __repr__(self, /):
@@ -84,23 +82,21 @@ class frozendict(Generic[K_co, V_co]):
 
     def __or__(self, other: Mapping[K_co, V_co], /) -> 'frozendict[K_co, V_co]':
         if isinstance(other, Mapping):
-            # noinspection PyArgumentList
             return self.__class__(chain(self._source.items(), other.items()))
 
         return NotImplemented
 
     def __ror__(self, other: Mapping[K_co, V_co], /) -> 'frozendict[K_co, V_co]':
         if isinstance(other, Mapping):
-            # noinspection PyArgumentList
             return self.__class__(chain(other.items(), self._source.items()))
 
         return NotImplemented
 
     def __eq__(self, other, /):
-        return self._source == other
+        return self._source is other or self._source == other
 
     def __ne__(self, other, /):
-        return self._source != other
+        return self._source is not other and self._source != other
 
     def __hash__(self, /):
         return self._hash
