@@ -45,6 +45,10 @@ class PairsView(Generic[T1, T2], Set[P]):
     def __repr__(self, /):
         return f'{self.__class__.__name__}({self._source!r})'
 
+    @classmethod
+    def _from_iterable(cls, iterable: Iterable[P], /):
+        return set(iterable)
+
 
 def unique_pairs(*data: Union[Mapping[T1, T2], Iterable[P]], mapping: dict[V, V] = None) -> dict[V, V]:
     d = {} if mapping is None else mapping
