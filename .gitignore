@@ -4,3 +4,6 @@
 # Common
 __pycache__/
 venv/
+
+# Project
+test.py
