@@ -93,10 +93,10 @@ class frozendict(Generic[K_co, V_co]):
         return NotImplemented
 
     def __eq__(self, other, /):
-        return self._source is other or self._source == other
+        return self._source == other
 
     def __ne__(self, other, /):
-        return self._source is not other and self._source != other
+        return self._source != other
 
     def __hash__(self, /):
         return self._hash

@@ -136,10 +136,10 @@ class AbstractBijectiveMap(Generic[T1, T2]):
         return f'{self.__class__.__name__}({self})'
 
     def __eq__(self, other, /):
-        return self is other or self._data == other
+        return self._data == other
 
     def __ne__(self, other, /):
-        return self is not other and self._data != other
+        return self._data != other
 
     def __getnewargs__(self, /) -> tuple[P, ...]:
         return tuple(self.pairs())
