@@ -1,6 +1,6 @@
-from collections.abc import Mapping, MappingView, Set
+from collections.abc import Iterable, Iterator, Mapping, MappingView, Set
 from sys import getsizeof
-from typing import Generic, Iterable, Iterator, Optional, TypeVar, Union, overload
+from typing import Generic, Optional, TypeVar, Union, overload
 
 T1 = TypeVar('T1')
 T2 = TypeVar('T2')
@@ -148,3 +148,94 @@ class AbstractBijectiveMap(Generic[T1, T2]):
 
     def __sizeof__(self, /):
         return super().__sizeof__() + getsizeof(self._data)
+
+
+class BijectiveMap(AbstractBijectiveMap):
+    def set(self, v1: T1, v2: T2, /):
+        self._data.pop(self._data.pop(v1, dummy), dummy)
+        self._data.pop(self._data.pop(v2, dummy), dummy)
+        self._data[v1] = v2
+        self._data[v2] = v1
+
+    def add(self, v1: T1, v2: T2, /):
+        if v1 in self._data:
+            v = v1
+        elif v2 in self._data:
+            v = v2
+        else:
+            self._data[v1] = v2
+            self._data[v2] = v1
+            return
+
+        raise ValueError(f'value {v} is already bound to {self[v]}')
+
+    @overload
+    def update(self, other: Mapping[T1, T2], /): ...
+    @overload
+    def update(self, other: Mapping[str, T2], /, **kwargs: T2): ...
+    @overload
+    def update(self, other: Mapping[T1, str], /, **kwargs: T1): ...
+    @overload
+    def update(self, other: Iterable[P], /): ...
+    @overload
+    def update(self, other: Iterable[tuple[str, T2]], /, **kwargs: T2): ...
+    @overload
+    def update(self, other: Iterable[tuple[T1, str]], /, **kwargs: T1): ...
+
+    def update(self, other=(), /, **kwargs):
+        unique_pairs(other, kwargs, mapping=self._data)
+
+    @overload
+    def pop(self, value: T1, /) -> T2: ...
+    @overload
+    def pop(self, value: T2, /) -> T1: ...
+    @overload
+    def pop(self, value: T1, default: T2, /) -> T2: ...
+    @overload
+    def pop(self, value: T1, default: T, /) -> Union[T2, T]: ...
+    @overload
+    def pop(self, value: T2, default: T1, /) -> T1: ...
+    @overload
+    def pop(self, value: T2, default: T, /) -> Union[T1, T]: ...
+
+    def pop(self, value, default=dummy, /):
+        if default is not dummy and value not in self._data:
+            return default
+
+        v = self._data.pop(value)
+        self._data.__delitem__(v)
+        return v
+
+    def popitem(self, /) -> P:
+        self._data.popitem()  # pops (v2, v1)
+        return self._data.popitem()
+
+    def __delitem__(self, value: V, /):
+        self._data.__delitem__(self._data.pop(value))
+
+    def clear(self, /):
+        self._data.clear()
+
+
+class FrozenBijectiveMap(AbstractBijectiveMap[T1_co, T2_co]):
+    __slots__ = '_hash',
+
+    @overload
+    def __init__(self, mapping: Mapping[T1_co, T2_co], /): ...
+    @overload
+    def __init__(self, iterable: Iterable[P_co], /): ...
+    @overload
+    def __init__(self, /): ...
+
+    def __init__(self, data=(), /):
+        super().__init__(data)
+        self._hash = hash(frozenset(frozenset(pair) for pair in self.pairs()))
+
+    def __hash__(self, /):
+        return self._hash
+
+    def __sizeof__(self, /):
+        return super().__sizeof__() + getsizeof(self._hash)
+
+
+__all__ = 'PairsView', 'AbstractBijectiveMap', 'BijectiveMap', 'FrozenBijectiveMap'

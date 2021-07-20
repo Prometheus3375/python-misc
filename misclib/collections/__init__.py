@@ -1,1 +1,1 @@
-from biject import *
+from ._biject import *
