@@ -46,13 +46,19 @@ class PairsView(Generic[T1, T2], Set[P]):
         return f'{self.__class__.__name__}({self._source!r})'
 
 
-def unique_pairs(iterable: Iterable[P], mapping: dict = None, /) -> dict[V, V]:
+def unique_pairs(*data: Union[Mapping[T1, T2], Iterable[P]], mapping: dict[V, V] = None) -> dict[V, V]:
     d = {} if mapping is None else mapping
-    for value1, value2 in iterable:
-        d.pop(d.pop(value1, dummy), dummy)
-        d.pop(d.pop(value2, dummy), dummy)
-        d[value1] = value2
-        d[value2] = value1
+    for iterable in data:
+        if isinstance(iterable, AbstractBijectiveMap):
+            iterable = iterable.pairs()
+        elif isinstance(iterable, Mapping):
+            iterable = iterable.items()
+
+        for value1, value2 in iterable:
+            d.pop(d.pop(value1, dummy), dummy)
+            d.pop(d.pop(value2, dummy), dummy)
+            d[value1] = value2
+            d[value2] = value1
 
     return d
 
@@ -69,8 +75,7 @@ class AbstractBijectiveMap(Generic[T1, T2]):
     def __init__(self, /): ...
 
     def __init__(self, data=(), /):
-        iterable = data.items() if isinstance(data, Mapping) else data
-        self._data: dict[V, V] = unique_pairs(iterable)
+        self._data: dict[V, V] = unique_pairs(data)
 
     def __new__(cls, /, *args, **kwargs):
         if cls is AbstractBijectiveMap:
