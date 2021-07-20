@@ -81,12 +81,6 @@ class AbstractBijectiveMap(Generic[T1, T2]):
     def __init__(self, data=(), /):
         self._data: dict[V, V] = unique_pairs(data)
 
-    def __new__(cls, /, *args, **kwargs):
-        if cls is AbstractBijectiveMap:
-            raise TypeError(f'cannot instantiate abstract class {AbstractBijectiveMap.__name__}')
-
-        return object.__new__(cls)
-
     def __len__(self, /):
         return len(self._data)
 

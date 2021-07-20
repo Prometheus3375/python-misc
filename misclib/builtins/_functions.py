@@ -4,7 +4,6 @@ from typing import TypeVar, overload
 from .._typing import SupportsLessThan
 
 T = TypeVar('T')
-# V = TypeVar('V')
 SLT = SupportsLessThan[T]
 key_func = Callable[[T], SupportsLessThan]
 
