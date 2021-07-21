@@ -1,4 +1,5 @@
 from collections.abc import ItemsView, Iterable, Iterator, KeysView, Mapping, ValuesView
+from copy import deepcopy
 from itertools import chain
 from sys import getsizeof
 from typing import Generic, Optional, TypeVar, Union, overload
@@ -63,8 +64,17 @@ class frozendict(Generic[K_co, V_co]):
     def items(self, /) -> ItemsView[K_co, V_co]:
         return self._source.items()
 
-    def copy(self, /):
-        return self.__class__(self._source)
+    # def copy(self, /):
+    #     return self
+
+    def __copy__(self, /):
+        return self
+
+    def __deepcopy__(self, memo, /):
+        if isinstance(self._hash, int):
+            return self
+
+        return self.__class__(deepcopy(self._source, memo))
 
     def __repr__(self, /):
         return f'{self.__class__.__name__}({self._source})'
