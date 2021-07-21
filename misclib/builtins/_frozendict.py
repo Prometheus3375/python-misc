@@ -28,7 +28,7 @@ class frozendict(Generic[K_co, V_co]):
 
     def __init__(self, iterable=(), /, **kwargs):
         self._source = dict(iterable, **kwargs)
-        self._hash = hash(frozenset(self._source.items()))
+        self._hash = None
 
     def __getitem__(self, item: K_co, /) -> V_co:
         return self._source[item]
@@ -103,7 +103,16 @@ class frozendict(Generic[K_co, V_co]):
         return self._source != other
 
     def __hash__(self, /):
-        return self._hash
+        if self._hash is None:
+            try:
+                self._hash = hash(frozenset(self._source.items()))
+            except TypeError as e:
+                self._hash = str(e)
+
+        if isinstance(self._hash, int):
+            return self._hash
+
+        raise TypeError(self._hash)
 
     def __getnewargs__(self, /):
         return tuple(self.items())
