@@ -1,93 +1,229 @@
 from collections.abc import Callable, Iterable
-from typing import TypeVar, overload
+from operator import itemgetter
+from typing import overload
 
-from .._typing import SupportsLessThan
+from misclib.protocols import SupportsRichComparison
 
-T = TypeVar('T')
-SLT = SupportsLessThan[T]
-key_func = Callable[[T], SupportsLessThan]
-
-_max = max
-_min = min
-_sorted = sorted
-
-
-def last_in_pair(pair): return pair[1]
-
-
-def build_arguments(iterable, key):
-    iterable = enumerate(iterable)
-    compare = (lambda pair: key(pair[1])) if callable(key) else last_in_pair
-    return iterable, compare
+type KeyFunc[T] = Callable[[T], SupportsRichComparison]
+_last_in_pair = itemgetter(1)
+_sentinel = object()
 
 
 @overload
-def max(value1: SLT, value2: SLT, /, *values: SLT) -> tuple[SLT, int]: ...
-@overload
-def max(value1: T, value2: T, /, *values: T, key: key_func) -> tuple[T, int]: ...
-@overload
-def max(iterable: Iterable[SLT], /) -> tuple[SLT, int]: ...
-@overload
-def max(iterable: Iterable[T], /, *, key: key_func) -> tuple[T, int]: ...
+def max_with_index[T: SupportsRichComparison](
+        value1: T,
+        value2: T,
+        /,
+        *values: T,
+        key: None = None,
+        ) -> tuple[int, T]: ...
 
 
-def max(*values, key=None):
+@overload
+def max_with_index[T](
+        value1: T,
+        value2: T,
+        /,
+        *values: T,
+        key: KeyFunc[T],
+        ) -> tuple[int, T]: ...
+
+
+@overload
+def max_with_index[T: SupportsRichComparison](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: None = None,
+        ) -> tuple[int, T]: ...
+
+
+@overload
+def max_with_index[T](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: KeyFunc[T],
+        ) -> tuple[int, T]: ...
+
+
+@overload
+def max_with_index[T: SupportsRichComparison, D](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: None = None,
+        default: D,
+        ) -> tuple[int, T] | D: ...
+
+
+@overload
+def max_with_index[T, D](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: KeyFunc[T],
+        default: D,
+        ) -> tuple[int, T] | D: ...
+
+
+def max_with_index[T, D](
+        *values: T,
+        key: KeyFunc[T] | None = None,
+        default: D = _sentinel,
+        ) -> T | D:
     """
-    With a single iterable argument, return its biggest item and the position of this item.
+    With a single :class:`Iterable` argument,
+    returns its greatest item and the zero-based position of this item.
+    The iterable cannot be empty unless parameter ``default`` is provided;
+    in such case returns the value of this parameter.
 
-    With two or more arguments, return the biggest argument with its position.
+    With two or more arguments,
+    returns the greatest argument with its zero-based position.
     """
     if len(values) == 1:
         values = values[0]
 
-    iterable, key = build_arguments(values, key)
-    index, value = _max(iterable, key=key)
-    return value, index
+    iterable = enumerate(values)
+    compare = _last_in_pair if key is None else (lambda pair: key(pair[1]))
+    if default is _sentinel:
+        return max(iterable, key=compare)
+
+    return max(iterable, key=compare, default=default)
 
 
 @overload
-def min(value1: SLT, value2: SLT, /, *values: SLT) -> tuple[SLT, int]: ...
-@overload
-def min(value1: T, values2: T, /, *values: T, key: key_func) -> tuple[T, int]: ...
-@overload
-def min(iterable: Iterable[SLT], /) -> tuple[SLT, int]: ...
-@overload
-def min(iterable: Iterable[T], /, *, key: key_func) -> tuple[T, int]: ...
+def min_with_index[T: SupportsRichComparison](
+        value1: T,
+        value2: T,
+        /,
+        *values: T,
+        key: None = None,
+        ) -> tuple[int, T]: ...
 
 
-def min(*values, key=None):
+@overload
+def min_with_index[T](
+        value1: T,
+        value2: T,
+        /,
+        *values: T,
+        key: KeyFunc[T],
+        ) -> tuple[int, T]: ...
+
+
+@overload
+def min_with_index[T: SupportsRichComparison](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: None = None,
+        ) -> tuple[int, T]: ...
+
+
+@overload
+def min_with_index[T](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: KeyFunc[T],
+        ) -> tuple[int, T]: ...
+
+
+@overload
+def min_with_index[T: SupportsRichComparison, D](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: None = None,
+        default: D,
+        ) -> tuple[int, T] | D: ...
+
+
+@overload
+def min_with_index[T, D](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: KeyFunc[T],
+        default: D,
+        ) -> tuple[int, T] | D: ...
+
+
+def min_with_index[T, D](
+        *values: T,
+        key: KeyFunc[T] | None = None,
+        default: D = _sentinel,
+        ) -> T | D:
     """
-    With a single iterable argument, return its smallest item and the position of this item.
+    With a single :class:`Iterable` argument,
+    returns its least item and the zero-based position of this item.
+    The iterable cannot be empty unless parameter ``default`` is provided;
+    in such case returns the value of this parameter.
 
-    With two or more arguments, return the smallest argument with its position.
+    With two or more arguments,
+    returns the least argument with its zero-based position.
     """
     if len(values) == 1:
         values = values[0]
 
-    iterable, key = build_arguments(values, key)
-    index, value = _min(iterable, key=key)
-    return value, index
+    iterable = enumerate(values)
+    compare = _last_in_pair if key is None else (lambda pair: key(pair[1]))
+    if default is _sentinel:
+        return min(iterable, key=compare)
+
+    return min(iterable, key=compare, default=default)
 
 
 @overload
-def sorted(iterable: Iterable[SLT], /, *, reverse: bool = False) -> tuple[list[SLT], list[int]]: ...
+def sorted_with_indices[T: SupportsRichComparison](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: None = None,
+        reverse: bool = False,
+        ) -> list[tuple[int, T]]: ...
+
+
 @overload
-def sorted(iterable: Iterable[T], /, *, key: key_func, reverse: bool = False) -> tuple[list[T], list[int]]: ...
+def sorted_with_indices[T](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: KeyFunc[T],
+        reverse: bool = False,
+        ) -> list[tuple[int, T]]: ...
 
 
-def sorted(iterable, /, *, key=None, reverse=False):
+def sorted_with_indices[T](
+        iterable: Iterable[T],
+        /,
+        *,
+        key: KeyFunc[T] | None = None,
+        reverse: bool = False,
+        ) -> list[tuple[int, T]]:
+    # noinspection PyUnresolvedReferences
     """
-    Return a tuple of 2 lists.
-    The first list contains all items from the iterable in ascending order.
-    The second list contains positions in the source iterable of the correspondent items in the first list.
+        Returns a new list containing all items
+        from the given iterable in ascending order
+        coupled with their original indices.
 
-    A custom key function can be supplied to customize the sort order, and the
-    reverse flag can be set to request the result in descending order.
-    """
-    iterable, key = build_arguments(iterable, key)
-    sort = _sorted(iterable, key=key, reverse=reverse)
-    indexes, values = tuple(list(it) for it in zip(*sort))
-    return values, indexes
+        A custom key function can be supplied to customize the sort order,
+        and the reverse flag can be set to request the result in descending order.
+
+        To obtain two separate lists -
+        one with original indices and one with sorted items -
+        use the next code snippet:
+
+        >>> iterable_ = 'parent'  # your iterable
+        >>> indices_items = sorted_with_indices(iterable_)
+        >>> indices, items = (list(tuple_) for tuple_ in zip(*items_indices))
+        """
+    return sorted(
+        enumerate(iterable),
+        key=_last_in_pair if key is None else (lambda pair: key(pair[1])),
+        reverse=reverse,
+        )
 
 
-__all__ = 'max', 'min', 'sorted'
+__all__ = 'max_with_index', 'min_with_index', 'sorted_with_indices'
