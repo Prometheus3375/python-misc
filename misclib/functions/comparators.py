@@ -4,6 +4,11 @@ from typing import overload
 
 from misclib.protocols import SupportsRichComparison
 
+
+# todo
+#  add binary_search
+#  add safe tuple comparisons
+
 type KeyFunc[T] = Callable[[T], SupportsRichComparison]
 _last_in_pair = itemgetter(1)
 _sentinel = object()
