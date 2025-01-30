@@ -1,6 +1,6 @@
 from typing import Any, Self, TypedDict
 
-from misclib.functions.comparators import max_with_index
+from misclib.functions.indexing import max_with_index
 
 int_float = int, float
 
