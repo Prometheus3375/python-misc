@@ -1,4 +1,4 @@
-from typing import Self, TypedDict
+from typing import Any, Self, TypedDict
 
 from misclib.functions.comparators import max_with_index
 
@@ -114,13 +114,13 @@ class Color:
             f')'
         )
 
-    def __eq__(self, other, /) -> bool:
+    def __eq__(self, other: Any, /) -> bool:
         if isinstance(other, Color):
             return self._argb == other._argb
 
         return NotImplemented
 
-    def __ne__(self, other, /) -> bool:
+    def __ne__(self, other: Any, /) -> bool:
         if isinstance(other, Color):
             return self._argb != other._argb
 
@@ -129,7 +129,29 @@ class Color:
     def __hash__(self, /) -> int:
         return self._argb
 
-    # todo add comparisons
+    def __lt__(self, other: Self, /) -> bool:
+        if isinstance(other, Color):
+            return self._argb < other._argb
+
+        return NotImplemented
+
+    def __le__(self, other: Self, /) -> bool:
+        if isinstance(other, Color):
+            return self._argb <= other._argb
+
+        return NotImplemented
+
+    def __gt__(self, other: Self, /) -> bool:
+        if isinstance(other, Color):
+            return self._argb > other._argb
+
+        return NotImplemented
+
+    def __ge__(self, other: Self, /) -> bool:
+        if isinstance(other, Color):
+            return self._argb >= other._argb
+
+        return NotImplemented
 
     def __sizeof__(self, /) -> int:
         return object.__sizeof__(self) + self._argb.__sizeof__()
@@ -359,42 +381,5 @@ class Color:
     from_hsb = from_hsv
     hsb = hsv
 
-
-# TODO move all tests to tests
-# c = Color.from_hsv(119, 0.75, 1)
-# c = Color.from_hsl(119, 1, 0.63)
-# print(f'{c!r}')
-# print(f'{c.hsv}')
-# print(f'{c.hsl}')
-#
-# c = Color.from_hsv(20, 0.75, 1)
-# c = Color.from_hsl(20, 1, 0.63)
-# print(f'{c!r}')
-# print(f'{c.hsv}')
-# print(f'{c.hsl}')
-#
-# c = Color.from_hsv(212, 0.94, 1)
-# c = Color.from_hsl(212, 1, 0.53)
-# print(f'{c!r}')
-# print(f'{c.hsv}')
-# print(f'{c.hsl}')
-#
-# c = Color.from_hsv(300, 0.5, 1)
-# c = Color.from_hsl(300, 1, 0.75)
-# print(f'{c!r}')
-# print(f'{c.hsv}')
-# print(f'{c.hsl}')
-#
-# c = Color.from_hsv(60, 0.5, 1)
-# c = Color.from_hsl(60, 1, 0.75)
-# print(f'{c!r}')
-# print(f'{c.hsv}')
-# print(f'{c.hsl}')
-#
-# c = Color.from_hsv(180, 0.5, 1)
-# c = Color.from_hsl(180, 1, 0.75)
-# print(f'{c!r}')
-# print(f'{c.hsv}')
-# print(f'{c.hsl}')
 
 __all__ = 'Color', 'ColorMap',
