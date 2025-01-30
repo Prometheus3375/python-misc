@@ -235,14 +235,16 @@ class Color:
     @classmethod
     def from_hex(cls, hex_: str, /, alpha: int = 255) -> Self:
         """
-        Creates a color structure from a hex string.
-        Information about alpha must at the end of this string,
-        or not present at all and passed via parameter ``alpha``.
+        Creates a color structure from the given hex string.
+        If the length of the string is 6,
+        value of  parameter ``alpha`` is used as alpha component.
+        If the length is 8,
+        then the last two characters of the string are used as alpha component.
         """
-        if len(str) == 8:
+        if len(hex_) == 8:
             alpha = int(hex_[6:8], 16)
-        elif len(str) != 6:
-            raise ValueError(f'length of a hex string must be 6 or 8, got {len(str)}')
+        elif len(hex_) != 6:
+            raise ValueError(f'length of a hex string must be 6 or 8, got {len(hex_)}')
 
         return cls(int(hex_[0:2], 16), int(hex_[2:4], 16), int(hex_[4:6], 16), alpha)
 
