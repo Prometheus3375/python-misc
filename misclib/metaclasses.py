@@ -190,6 +190,17 @@ class Singleton(type, metaclass=CombineMeta):
 class EmptySlotsByDefaults(type, metaclass=CombineMeta):
     """
     A metaclass that adds empty slots if they are not defined inside the namespace of a class.
+
+    >>> from misclib.metaclasses import EmptySlotsByDefaults
+    >>> class MyClass(metaclass=EmptySlotsByDefaults):
+    ...     __slots__ = 'field1', 'field2'
+    ...
+    >>> MyClass.__slots__
+    ('field1', 'field2')
+    >>> class MySubclass(MyClass): pass
+    ...
+    >>> MySubclass.__slots__
+    ()
     """
     def __new__(
             mcs,
