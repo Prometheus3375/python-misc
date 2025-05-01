@@ -167,8 +167,21 @@ def max_with_index[T, D](
     The iterable cannot be empty unless parameter ``default`` is provided;
     in such case returns the value of this parameter.
 
+    >>> from misclib.functions.indexing import max_with_index
+    >>> max_with_index('edcba')
+    (0, 'e')
+    >>> max_with_index('')
+    Traceback (most recent call last):
+        ...
+    ValueError: max() iterable argument is empty
+    >>> max_with_index('', default=-1)
+    -1
+
     With two or more arguments,
     returns the greatest argument with its zero-based position.
+
+    >>> max_with_index('c', 'a', 'e', 'd', 'b')
+    (2, 'e')
     """
     if len(values) == 1:
         values = values[0]
@@ -250,8 +263,21 @@ def min_with_index[T, D](
     The iterable cannot be empty unless parameter ``default`` is provided;
     in such case returns the value of this parameter.
 
+    >>> from misclib.functions.indexing import min_with_index
+    >>> min_with_index('edcba')
+    (4, 'a')
+    >>> min_with_index('')
+    Traceback (most recent call last):
+        ...
+    ValueError: min() iterable argument is empty
+    >>> min_with_index('', default=-1)
+    -1
+
     With two or more arguments,
     returns the least argument with its zero-based position.
+
+    >>> min_with_index('c', 'a', 'e', 'd', 'b')
+    (1, 'a')
     """
     if len(values) == 1:
         values = values[0]
@@ -293,21 +319,34 @@ def sorted_with_indices[T](
         ) -> list[tuple[int, T]]:
     # noinspection PyUnresolvedReferences
     """
-        Returns a new list containing all items
-        from the given iterable in ascending order
-        coupled with their original indices.
+    Returns a new list containing all items
+    from the given iterable in ascending order
+    coupled with their original indices.
 
-        A custom key function can be supplied to customize the sort order,
-        and the reverse flag can be set to request the result in descending order.
+    >>> from misclib.functions.indexing import sorted_with_indices
+    >>> sorted_with_indices('edcba')
+    [(4, 'a'), (3, 'b'), (2, 'c'), (1, 'd'), (0, 'e')]
 
-        To obtain two separate lists -
-        one with original indices and one with sorted items -
-        use the next code snippet:
+    A custom key function can be supplied to customize the sort order,
+    and the reverse flag can be set to request the result in descending order.
 
-        >>> iterable_ = 'parent'  # your iterable
-        >>> indices_items = sorted_with_indices(iterable_)
-        >>> indices, items = (list(tuple_) for tuple_ in zip(*items_indices))
-        """
+    >>> sorted_with_indices('edcba', reverse=True)
+    [(0, 'e'), (1, 'd'), (2, 'c'), (3, 'b'), (4, 'a')]
+    >>> sorted_with_indices('edcba', key=lambda x: 99 - ord(x))
+    [(0, 'e'), (1, 'd'), (2, 'c'), (3, 'b'), (4, 'a')]
+
+    To obtain two separate lists -
+    one with original indices and one with sorted items -
+    use the next code snippet:
+
+    >>> iterable_ = 'edcba'  # your iterable
+    >>> indices_items = sorted_with_indices(iterable_)
+    >>> indices, items = (list(i_v) for i_v in zip(*indices_items))
+    >>> indices
+    [4, 3, 2, 1, 0]
+    >>> items
+    ['a', 'b', 'c', 'd', 'e']
+    """
     return sorted(
         enumerate(iterable),
         key=_last_in_pair if key is None else (lambda pair: key(pair[1])),
