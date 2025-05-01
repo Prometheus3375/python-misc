@@ -11,12 +11,15 @@ class Supress:
     >>> result
     1
     >>> with Supress(ZeroDivisionError):
-    ...     result = 1 / 0
-    ... print(result)
+    ...     error = 1 / 0
+    ...     result = 10
+    ...
+    >>> result
     1
     >>> with Supress(ValueError):
-    ...     result = 1 / 0
-    ... print(result)
+    ...     error = 1 / 0
+    ...     result = 10
+    ...
     Traceback (most recent call last):
         ...
     ZeroDivisionError: division by zero
@@ -26,8 +29,10 @@ class Supress:
     >>> issubclass(ZeroDivisionError, ArithmeticError)
     True
     >>> with Supress(ArithmeticError):
-    ...     result = 1 / 0
-    ... print(result)
+    ...     error = 1 / 0
+    ...     result = 10
+    ...
+    >>> result
     1
     """
     __slots__ = '_exc_cls',
