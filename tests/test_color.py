@@ -1,16 +1,10 @@
-from collections.abc import Iterator
+import sys
+from collections.abc import Iterable, Iterator
 from itertools import product
-from unittest import TestCase
+from typing import override
+from unittest import TestCase, skipUnless
 
 from misclib.utils.color import Color
-
-
-def all_colors() -> Iterator[tuple[int, int, int, int]]:
-    return product(range(256), range(256), range(256), range(256))
-
-
-def all_colors_no_alpha() -> Iterator[tuple[int, int, int]]:
-    return product(range(256), range(256), range(256))
 
 
 sample_numbers = [
@@ -19,12 +13,29 @@ sample_numbers = [
     for i in k
     if 0 <= i <= 255
     ]
-sample_data = list(product(sample_numbers, sample_numbers, sample_numbers, sample_numbers))
 
 
-class TestColor(TestCase):
+class TestColorSample(TestCase):
+    @staticmethod
+    def values() -> Iterable[int]:
+        return sample_numbers
+
+    def data(self, /) -> Iterator[tuple[int, int, int, int]]:
+        return product(self.values(), self.values(), self.values(), self.values())
+
+    def data_no_alpha(self, /) -> Iterator[tuple[int, int, int]]:
+        return product(self.values(), self.values(), self.values())
+
+    def test_constructor(self, /) -> None:
+        for red, green, blue, alpha in self.data():
+            color = Color(red, green, blue, alpha)
+            color_tuple = color.to_tuple()
+            color_map = color.to_dict()
+            self.assertEqual(color, Color(*color_tuple))
+            self.assertEqual(color, Color(**color_map))
+
     def test_properties(self, /) -> None:
-        for red, green, blue, alpha in sample_data:
+        for red, green, blue, alpha in self.data():
             color_kw = Color(red=red, green=green, blue=blue, alpha=alpha)
             color_pos = Color(red, green, blue, alpha)
             for color in (color_kw, color_pos):
@@ -43,25 +54,20 @@ class TestColor(TestCase):
                 self.assertEqual(blue * 100 / 255, color.blue_p)
                 self.assertEqual(alpha * 100 / 255, color.alpha_p)
 
-    def test_constructor(self, /) -> None:
-        for red, green, blue, alpha in sample_data:
-            color = Color(red, green, blue, alpha)
-            color_tuple = color.to_tuple()
-            color_map = color.to_dict()
-            self.assertEqual(color, Color(*color_tuple))
-            self.assertEqual(color, Color(**color_map))
-
     def test_hex(self, /) -> None:
-        for red, green, blue, alpha, in sample_data:
-            color = Color(red, green, blue, alpha)
-            hex_ = color.hex
-            self.assertEqual(color, Color.from_hex(hex_))
+        for red, green, blue in self.data_no_alpha():
+            hex_no_alpha = f'{red:02x}{green:02x}{blue:02x}'
 
-            for new_alpha in sample_numbers:
-                self.assertEqual(color, Color.from_hex(hex_, alpha=new_alpha))
+            for alpha in self.values():
+                color = Color(red, green, blue, alpha)
+                self.assertEqual(color, Color.from_hex(hex_no_alpha, alpha=alpha))
+
+                hex_with_alpha = color.hex
+                self.assertEqual(color, Color.from_hex(hex_with_alpha))
+                self.assertEqual(color, Color.from_hex(hex_with_alpha, alpha=255-alpha))
 
     def test_conversions(self, /) -> None:
-        for red, green, blue in all_colors_no_alpha():
+        for red, green, blue in self.data_no_alpha():
             color = Color(red, green, blue)
             hsl = color.hsl
             hsv = color.hsv
@@ -93,3 +99,11 @@ class TestColor(TestCase):
                     Color.from_hsl(hue=hue1, saturation=sat_l, lightness=lightness),
                     Color.from_hsv(hue=hue2, saturation=sat_v, value=value),
                     )
+
+
+@skipUnless('TestColorFull' in sys.argv[-1], 'must be called directly')
+class TestColorFull(TestColorSample):
+    @staticmethod
+    @override
+    def values() -> Iterable[int]:
+        return range(256)
