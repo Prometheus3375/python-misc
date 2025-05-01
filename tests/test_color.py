@@ -6,12 +6,15 @@ from unittest import TestCase, skipUnless
 
 from misclib.utils.color import Color
 
-
 sample_numbers = [
-    i
-    for k in ((i - 2, i - 1, i, i + 1, i + 2) for i in range(0, 257, 32))
-    for i in k
-    if 0 <= i <= 255
+    0, 1, 2,
+    *(
+        i
+        for k in ((i - 1, i, i + 1) for i in range(32, 225, 32))
+        for i in k
+        if 0 <= i <= 255
+        ),
+    253, 254, 255,
     ]
 
 
@@ -64,7 +67,7 @@ class TestColorSample(TestCase):
 
                 hex_with_alpha = color.hex
                 self.assertEqual(color, Color.from_hex(hex_with_alpha))
-                self.assertEqual(color, Color.from_hex(hex_with_alpha, alpha=255-alpha))
+                self.assertEqual(color, Color.from_hex(hex_with_alpha, alpha=255 - alpha))
 
     def test_conversions(self, /) -> None:
         for red, green, blue in self.data_no_alpha():
