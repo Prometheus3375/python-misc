@@ -229,13 +229,33 @@ class TimeTracker:
         '_log_error',
         )
 
+    DEFAULT_MESSAGE_FORMAT_SUCCESS = 'Time elapsed: {duration}'
+    """
+    Default message format for time logging on success.
+    """
+
+    DEFAULT_LOG_FUNCTION_SUCCESS = print
+    """
+    Default function for time logging on success.
+    """
+
+    DEFAULT_MESSAGE_FORMAT_ERROR = 'Time elapsed: {duration}'
+    """
+    Default message format for time logging on failure.
+    """
+
+    DEFAULT_LOG_FUNCTION_ERROR = print
+    """
+    Default function for time logging on failure.
+    """
+
     def __init__(self, /, **kwargs: Unpack[TimeTrackerArguments]) -> None:
         self.__start_time = 0.
         self._duration = ZERO_DURATION
-        self._msg_fmt_success = kwargs.get('msg_fmt_success', DEFAULT_MESSAGE_FORMAT)
-        self._log_success = kwargs.get('log_success', DEFAULT_LOG_FUNCTION)
-        self._msg_fmt_error = kwargs.get('msg_fmt_error', DEFAULT_MESSAGE_FORMAT)
-        self._log_error = kwargs.get('log_error', DEFAULT_LOG_FUNCTION)
+        self._msg_fmt_success = kwargs.get('msg_fmt_success', self.DEFAULT_MESSAGE_FORMAT_SUCCESS)
+        self._log_success = kwargs.get('log_success', self.DEFAULT_LOG_FUNCTION_SUCCESS)
+        self._msg_fmt_error = kwargs.get('msg_fmt_error', self.DEFAULT_MESSAGE_FORMAT_ERROR)
+        self._log_error = kwargs.get('log_error', self.DEFAULT_LOG_FUNCTION_ERROR)
 
     @property
     def duration(self, /) -> DurationData:
@@ -266,7 +286,7 @@ class TimeTracker:
 
         Default implementation prints time elapsed.
         """
-        self._log_success(self._msg_fmt_success.format(self._duration))
+        self._log_success(self._msg_fmt_success.format(duration=self._duration))
 
     # noinspection PyUnusedLocal
     def _exit_exception(self, exc: BaseException, traceback: TracebackType, /) -> None:
@@ -275,7 +295,7 @@ class TimeTracker:
 
         Default implementation prints time elapsed.
         """
-        self._log_error(self._msg_fmt_error.format(self._duration))
+        self._log_error(self._msg_fmt_error.format(duration=self._duration))
 
     @final
     def __exit__(
@@ -302,6 +322,20 @@ class CallableTimeTracker(TimeTracker):
     """
     __slots__ = '_call_str',
 
+    DEFAULT_MESSAGE_FORMAT_SUCCESS = 'Call {call_str} succeeded, time elapsed: {duration}'
+    """
+    Default message format for time logging of successful function call.
+    """
+
+    DEFAULT_MESSAGE_FORMAT_ERROR = (
+        'Call {call_str} failed, '
+        '{exc.__class__.__module__}.{exc.__class__.__qualname__}: {exc}\n'
+        'Time elapsed: {duration}'
+    )
+    """
+    Default message format for time logging of failed function call.
+    """
+
     def __init__(
             self,
             /,
@@ -318,15 +352,13 @@ class CallableTimeTracker(TimeTracker):
 
     @override
     def _exit_success(self, /) -> None:
-        print(f'Call {self._call_str} successful, time elapsed: {self._duration}')
+        fmt_args = dict(call_str=self._call_str, duration=self._duration)
+        self._log_success(self._msg_fmt_success.format_map(fmt_args))
 
     @override
     def _exit_exception(self, exc: BaseException, traceback: TracebackType, /) -> None:
-        print(
-            f'Call {self._call_str} failed, '
-            f'{type(exc)}: {str(exc)}\n'
-            f'Time elapsed: {self._duration}'
-            )
+        fmt_args = dict(call_str=self._call_str, exc=exc, duration=self._duration)
+        self._log_error(self._msg_fmt_error.format_map(fmt_args))
 
     @overload
     @classmethod
