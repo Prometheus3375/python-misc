@@ -1,24 +1,130 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from functools import wraps
-from itertools import dropwhile
 from time import perf_counter
 from types import TracebackType
-from typing import Any, NamedTuple, Self, final
+from typing import Any, NamedTuple, Self, final, overload, override
 
-DURATION_UNIT_NAMES = 'yr', 'mo', 'wk', 'd', 'h', 'min', 's'
+DURATION_UNIT_NAMES = 'yr', 'mo', 'wk', 'd', 'h', 'm', 's', 'ms', '	μs', 'ns'
 DURATION_UNITS = {
-    'years':   60 * 60 * 24 * 365,
-    'months':  60 * 60 * 24 * 30,
-    'weeks':   60 * 60 * 24 * 7,
-    'days':    60 * 60 * 24,
-    'hours':   60 * 60,
-    'minutes': 60,
-    'seconds': 1,
+    'years':        60 * 60 * 24 * 365,
+    'months':       60 * 60 * 24 * 30,
+    'weeks':        60 * 60 * 24 * 7,
+    'days':         60 * 60 * 24,
+    'hours':        60 * 60,
+    'minutes':      60,
+    'seconds':      1,
+    'milliseconds': 10 ** -3,
+    'microseconds': 10 ** -6,
+    'nanoseconds':  10 ** -9,
     }
 
 
-def _is_zero(value_unit: tuple[int, str], /) -> bool:
-    return value_unit[0] == 0
+def _generate_non_zero_units[T](values: Sequence[T], /) -> Iterator[tuple[T, str]]:
+    it = zip(values, DURATION_UNIT_NAMES)
+    for value_unit in it:
+        if value_unit[0] != 0:
+            yield value_unit
+            yield from it
+            break
+    else:
+        # The iterator is exhausted, i.e., all values are zero,
+        # yield the very last value with its unit.
+        yield values[-1], DURATION_UNIT_NAMES[-1]
+
+
+def format_seconds(seconds: float, /) -> str:
+    """
+    Formats the given number of seconds into
+    years, months, weeks, days, hours, minutes, seconds,
+    milliseconds, microseconds and nanoseconds.
+
+    Identical to ``str(DurationData.from_seconds(seconds))``, but faster.
+    """
+    data = []
+    for mul in DURATION_UNITS.values():
+        value, seconds = divmod(seconds, mul)
+        data.append(round(value))
+
+    return ' '.join(
+        f'{value}{unit}'
+        for value, unit in _generate_non_zero_units(data)
+        )
+
+
+@contextmanager
+def time_tracker(
+        msg_fmt: str = 'Time elapsed: {}',
+        log: Callable[[str], None] = print,
+        ) -> Iterator[None]:
+    """
+    A context manager to track time of the underlined block of code.
+    Whether the block fails or succeeds, the time is logged.
+
+    :param msg_fmt: The format of the logged string,
+      must contain one positional format parameter for the time entry.
+    :param log: The callable for logging the message with the time entry in the given format.
+    """
+    start_time = perf_counter()
+    try:
+        yield
+    finally:
+        log(msg_fmt.format(format_seconds(perf_counter() - start_time)))
+
+
+@overload
+def track_time[** P, R](
+        func: Callable[P, R],
+        /,
+        *,
+        msg_fmt: str = ...,
+        log: Callable[[str], None] = ...,
+        ) -> Callable[P, R]: ...
+
+
+@overload
+def track_time[** P, R](
+        func: None = None,
+        /,
+        *,
+        msg_fmt: str = ...,
+        log: Callable[[str], None] = ...,
+        ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+
+
+def track_time[** P, R](
+        func: Callable[P, R] | None = None,
+        /,
+        *,
+        msg_fmt: str = 'Time elapsed: {}',
+        log: Callable[[str], None] = print,
+        ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
+    """
+    A decorator that tracks time of the decorated function.
+    Whether a function call fails or succeeds, the time is logged.
+
+    :param func: A function to decorate.
+      Can be omitted when other parameters specified and
+      this decorator is used via special decorator syntax
+    :param msg_fmt: The format of the logged string,
+      must contain one positional format parameter for the time entry.
+    :param log: The callable for logging the message with the time entry in the given format.
+    """
+    def track_time_decorator(func: Callable[P, R], /) -> Callable[P, R]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            start_time = perf_counter()
+            try:
+                return func(*args, **kwargs)
+            finally:
+                log(msg_fmt.format(format_seconds(perf_counter() - start_time)))
+
+        return wrapper
+
+    if func is None:
+        return track_time_decorator
+
+    return track_time_decorator(func)
 
 
 class DurationData(NamedTuple):
@@ -141,38 +247,6 @@ class TimeTracker:
             self._exit_exception(exc_val, exc_tb)
 
         return False
-
-
-def format_seconds(seconds: float, fmt: str = '', /) -> str:
-    """
-    Formats the given number of seconds similar to formatting of :class:`DurationData`.
-    Identical to ``str(DurationData.from_seconds(seconds))``, but faster.
-    """
-    s = round(seconds)
-    data = []
-    for mul in DURATION_UNITS.values():
-        value, s = divmod(s, mul)
-        data.append(value)
-
-    return ' '.join(
-        f'{value:{fmt}}{unit}'
-        for value, unit in dropwhile(_is_zero, zip(data, DURATION_UNIT_NAMES))
-        )
-
-
-def track_time[** P, R](func: Callable[P, R], /) -> Callable[P, R]:
-    """
-    A decorator that prints elapsed time after function call.
-    """
-    @wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        start_time = perf_counter()
-        try:
-            return func(*args, **kwargs)
-        finally:
-            print(f'\nTime elapsed: {format_seconds(perf_counter() - start_time)}')
-
-    return wrapper
 
 
 class CallableTimeTracker(TimeTracker):
