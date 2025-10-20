@@ -52,10 +52,14 @@ def format_seconds(seconds: float, /) -> str:
         )
 
 
+DEFAULT_MESSAGE_FORMAT = 'Time elapsed: {}'
+DEFAULT_LOG_FUNCTION = print
+
+
 @contextmanager
 def time_tracker(
-        msg_fmt: str = 'Time elapsed: {}',
-        log: Callable[[str], None] = print,
+        msg_fmt: str = DEFAULT_MESSAGE_FORMAT,
+        log: Callable[[str], None] = DEFAULT_LOG_FUNCTION,
         ) -> Iterator[None]:
     """
     A context manager to track time of the underlined block of code.
@@ -77,8 +81,8 @@ def track_time[** P, R](
         func: Callable[P, R],
         /,
         *,
-        msg_fmt: str = ...,
-        log: Callable[[str], None] = ...,
+        msg_fmt: str = DEFAULT_MESSAGE_FORMAT,
+        log: Callable[[str], None] = DEFAULT_LOG_FUNCTION,
         ) -> Callable[P, R]: ...
 
 
@@ -87,8 +91,8 @@ def track_time[** P, R](
         func: None = None,
         /,
         *,
-        msg_fmt: str = ...,
-        log: Callable[[str], None] = ...,
+        msg_fmt: str = DEFAULT_MESSAGE_FORMAT,
+        log: Callable[[str], None] = DEFAULT_LOG_FUNCTION,
         ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
@@ -96,8 +100,8 @@ def track_time[** P, R](
         func: Callable[P, R] | None = None,
         /,
         *,
-        msg_fmt: str = 'Time elapsed: {}',
-        log: Callable[[str], None] = print,
+        msg_fmt: str = DEFAULT_MESSAGE_FORMAT,
+        log: Callable[[str], None] = DEFAULT_LOG_FUNCTION,
         ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """
     A decorator that tracks time of the decorated function.
@@ -110,7 +114,7 @@ def track_time[** P, R](
       must contain one positional format parameter for the time entry.
     :param log: The callable for logging the message with the time entry in the given format.
     """
-    def track_time_decorator(func: Callable[P, R], /) -> Callable[P, R]:
+    def decorator(func: Callable[P, R], /) -> Callable[P, R]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             start_time = perf_counter()
@@ -121,10 +125,7 @@ def track_time[** P, R](
 
         return wrapper
 
-    if func is None:
-        return track_time_decorator
-
-    return track_time_decorator(func)
+    return decorator if func is None else decorator(func)
 
 
 class DurationData(NamedTuple):
