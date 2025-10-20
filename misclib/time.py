@@ -217,8 +217,9 @@ class TimeTracker:
     """
     Base class for context managers to track time of underlined block of code.
 
-    Subclasses cannot overwrite methods ``__enter__`` and ``__exit__``,
-    but can overwrite methods ``_enter``, ``_exit_success`` and ``_exit_exception``.
+    Subclasses cannot override methods ``__enter__`` and ``__exit__``,
+    but can override methods ``_enter``, ``_exit_success`` and ``_exit_exception``.
+    Subclasses can also override class constants.
     """
     __slots__ = (
         '__start_time',
@@ -250,6 +251,21 @@ class TimeTracker:
     """
 
     def __init__(self, /, **kwargs: Unpack[TimeTrackerArguments]) -> None:
+        """
+        All default values for every parameter are specified as constants in this class.
+
+        :param msg_fmt_success: The format of the logged string if no exception is met.
+          Must contain keyword format parameter ``duration`` for the time entry.
+
+        :param log_success: The callable for logging the message with the time entry
+          if no exception is met.
+
+        :param msg_fmt_error: The format of the logged string if an exception is met.
+          Must contain keyword format parameter ``duration`` for the time entry.
+
+        :param log_error: The callable for logging the message with the time entry
+          if an exception is met.
+        """
         self.__start_time = 0.
         self._duration = ZERO_DURATION
         self._msg_fmt_success = kwargs.get('msg_fmt_success', self.DEFAULT_MESSAGE_FORMAT_SUCCESS)
@@ -344,6 +360,24 @@ class CallableTimeTracker(TimeTracker):
             func_kwargs: dict[str, Any],
             **kwargs: Unpack[TimeTrackerArguments],
             ) -> None:
+        """
+        All default values for every parameter are specified as constants in this class.
+
+        :param msg_fmt_success: The format of the logged string if no exception is met.
+          Must contain keyword format parameters
+          ``call_str`` for the call representation and ``duration`` for the time entry.
+
+        :param log_success: The callable for logging the message with the time entry
+          if no exception is met.
+
+        :param msg_fmt_error: The format of the logged string if an exception is met.
+          Must contain keyword format parameters
+          ``call_str`` for the call representation,
+          ``exc`` for the exception occurred and ``duration`` for the time entry.
+
+        :param log_error: The callable for logging the message with the time entry
+          if an exception is met.
+        """
         super().__init__(**kwargs)
 
         args = [repr(v) for v in func_args]
@@ -387,6 +421,9 @@ class CallableTimeTracker(TimeTracker):
             ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
         """
         Decorates the given callable with the instance of this class.
+
+        Optional keyword arguments modify the instance.
+        Learn more about them in docs for the constrictor of this class.
         """
         def decorator(func: Callable[P, R], /) -> Callable[P, R]:
             @wraps(func)
