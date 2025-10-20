@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from functools import wraps
 from time import perf_counter
 from types import TracebackType
-from typing import Any, NamedTuple, Self, final, overload, override
+from typing import Any, NamedTuple, Self, TypedDict, Unpack, final, overload, override
 
 DURATION_UNIT_NAMES = 'yr', 'mo', 'wk', 'd', 'h', 'm', 's', 'ms', '	μs', 'ns'
 DURATION_UNITS = {
@@ -145,6 +145,9 @@ class DurationData(NamedTuple):
     hours: int
     minutes: int
     seconds: int
+    milliseconds: int
+    microseconds: int
+    nanoseconds: int
 
     @property
     def total(self, /) -> int:
@@ -162,17 +165,17 @@ class DurationData(NamedTuple):
         Creates an instance of :class:`DurationData` from
         the given floating point number of seconds.
         """
-        s = round(seconds)
         data = {}
         for name, mul in DURATION_UNITS.items():
-            data[name], s = divmod(s, mul)
+            value, seconds = divmod(seconds, mul)
+            data[name] = round(value)
 
         return cls(**data)
 
     def __format__(self, fmt: str, /) -> str:
         return ' '.join(
             f'{value:{fmt}}{unit}'
-            for value, unit in dropwhile(_is_zero, zip(self, DURATION_UNIT_NAMES))
+            for value, unit in _generate_non_zero_units(self)
             )
 
     def __str__(self, /) -> str:
@@ -181,8 +184,18 @@ class DurationData(NamedTuple):
 
 ZERO_DURATION = DurationData.from_seconds(0)
 """
-Special instance of :class:`DurationData` representing zero duration.
+The special instance of :class:`DurationData` representing zero duration.
 """
+
+
+class TimeTrackerArguments(TypedDict, total=False):
+    """
+    Keyword arguments for the constructor of :class:`TimeTracker`.
+    """
+    msg_fmt_success: str
+    log_success: Callable[[str], None]
+    msg_fmt_error: str
+    log_error: Callable[[str], None]
 
 
 class TimeTracker:
@@ -192,11 +205,22 @@ class TimeTracker:
     Subclasses cannot overwrite methods ``__enter__`` and ``__exit__``,
     but can overwrite methods ``_enter``, ``_exit_success`` and ``_exit_exception``.
     """
-    __slots__ = '__start_time', '_duration'
+    __slots__ = (
+        '__start_time',
+        '_duration',
+        '_msg_fmt_success',
+        '_log_success',
+        '_msg_fmt_error',
+        '_log_error',
+        )
 
-    def __init__(self, /) -> None:
+    def __init__(self, /, **kwargs: Unpack[TimeTrackerArguments]) -> None:
         self.__start_time = 0.
         self._duration = ZERO_DURATION
+        self._msg_fmt_success = kwargs.get('msg_fmt_success', DEFAULT_MESSAGE_FORMAT)
+        self._log_success = kwargs.get('log_success', DEFAULT_LOG_FUNCTION)
+        self._msg_fmt_error = kwargs.get('msg_fmt_error', DEFAULT_MESSAGE_FORMAT)
+        self._log_error = kwargs.get('log_error', DEFAULT_LOG_FUNCTION)
 
     @property
     def duration(self, /) -> DurationData:
@@ -213,8 +237,8 @@ class TimeTracker:
 
         Default implementation sets starting time and resets duration.
         """
-        self.__start_time = perf_counter()
         self._duration = ZERO_DURATION
+        self.__start_time = perf_counter()
 
     @final
     def __enter__(self, /) -> Self:
@@ -227,7 +251,7 @@ class TimeTracker:
 
         Default implementation prints time elapsed.
         """
-        print(f'\nTime elapsed: {self._duration}')
+        self._log_success(self._msg_fmt_success.format(self._duration))
 
     # noinspection PyUnusedLocal
     def _exit_exception(self, exc: BaseException, traceback: TracebackType, /) -> None:
@@ -236,7 +260,7 @@ class TimeTracker:
 
         Default implementation prints time elapsed.
         """
-        print(f'\nTime elapsed: {self._duration}')
+        self._log_error(self._msg_fmt_error.format(self._duration))
 
     @final
     def __exit__(
@@ -265,21 +289,23 @@ class CallableTimeTracker(TimeTracker):
 
     def __init__(
             self,
+            /,
             func: Callable,
             func_args: tuple,
             func_kwargs: dict[str, Any],
-            /,
+            **kwargs: Unpack[TimeTrackerArguments],
             ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
 
         args = [repr(v) for v in func_args]
         args.extend(f'{name}={v!r}' for name, v in func_kwargs.items())
         self._call_str = f'{func.__qualname__}({', '.join(args)})'
 
+    @override
     def _exit_success(self, /) -> None:
         print(f'Call {self._call_str} successful, time elapsed: {self._duration}')
 
-    # noinspection PyUnusedLocal
+    @override
     def _exit_exception(self, exc: BaseException, traceback: TracebackType, /) -> None:
         print(
             f'Call {self._call_str} failed, '
@@ -287,17 +313,43 @@ class CallableTimeTracker(TimeTracker):
             f'Time elapsed: {self._duration}'
             )
 
+    @overload
     @classmethod
-    def wrap[** P, R](cls, callable_: Callable[P, R], /) -> Callable[P, R]:
+    def wrap[** P, R](
+            cls,
+            callable_: Callable[P, R],
+            /,
+            **kwargs: Unpack[TimeTrackerArguments],
+            ) -> Callable[P, R]: ...
+
+    @overload
+    @classmethod
+    def wrap[** P, R](
+            cls,
+            callable_: None = None,
+            /,
+            **kwargs: Unpack[TimeTrackerArguments],
+            ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+
+    @classmethod
+    def wrap[** P, R](
+            cls,
+            callable_: Callable[P, R] | None = None,
+            /,
+            **tracker_kwargs: Unpack[TimeTrackerArguments],
+            ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
         """
         Decorates the given callable with the instance of this class.
         """
-        @wraps(callable_)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            with cls(callable_, args, kwargs):
-                return callable_(*args, **kwargs)
+        def decorator(func: Callable[P, R], /) -> Callable[P, R]:
+            @wraps(func)
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+                with cls(func, args, kwargs, **tracker_kwargs):
+                    return func(*args, **kwargs)
 
-        return wrapper
+            return wrapper
+
+        return decorator if callable_ is None else decorator(callable_)
 
 
 __all__ = (
