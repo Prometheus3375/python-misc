@@ -53,7 +53,13 @@ def format_seconds(seconds: float, /) -> str:
 
 
 DEFAULT_MESSAGE_FORMAT = 'Time elapsed: {}'
+"""
+Default message format for time logging.
+"""
 DEFAULT_LOG_FUNCTION = print
+"""
+Default function for time logging.
+"""
 
 
 @contextmanager
