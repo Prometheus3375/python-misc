@@ -5,6 +5,15 @@ from time import perf_counter
 from types import TracebackType
 from typing import Any, NamedTuple, Self, TypedDict, Unpack, final, overload, override
 
+__all__ = (
+    'DurationData',
+    'ZERO_DURATION',
+    'TimeTracker',
+    'format_seconds',
+    'track_time',
+    'CallableTimeTracker',
+    )
+
 DURATION_UNIT_NAMES = 'yr', 'mo', 'wk', 'd', 'h', 'm', 's', 'ms', '	μs', 'ns'
 DURATION_UNITS = {
     'years':        60 * 60 * 24 * 365,
@@ -350,13 +359,3 @@ class CallableTimeTracker(TimeTracker):
             return wrapper
 
         return decorator if callable_ is None else decorator(callable_)
-
-
-__all__ = (
-    'DurationData',
-    'ZERO_DURATION',
-    'TimeTracker',
-    'format_seconds',
-    'track_time',
-    'CallableTimeTracker',
-    )

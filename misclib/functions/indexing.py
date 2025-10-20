@@ -4,6 +4,8 @@ from typing import overload
 
 from misclib.protocols import SupportsRichComparison
 
+__all__ = 'binary_search', 'max_with_index', 'min_with_index', 'sorted_with_indices'
+
 
 @overload
 def binary_search[T: SupportsRichComparison](
@@ -352,6 +354,3 @@ def sorted_with_indices[T](
         key=_last_in_pair if key is None else (lambda pair: key(pair[1])),
         reverse=reverse,
         )
-
-
-__all__ = 'binary_search', 'max_with_index', 'min_with_index', 'sorted_with_indices'

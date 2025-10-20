@@ -1,6 +1,8 @@
 from types import TracebackType
 from typing import Self
 
+__all__ = 'Supress',
+
 
 class Supress:
     """
@@ -62,6 +64,3 @@ class Supress:
             /,
             ) -> bool:
         return exc_type and issubclass(exc_type, self._error_classes)
-
-
-__all__ = 'Supress',

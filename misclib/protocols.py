@@ -1,5 +1,7 @@
 from typing import Protocol
 
+__all__ = 'SupportsDunderLT', 'SupportsDunderGT', 'SupportsRichComparison'
+
 
 class SupportsDunderLT[T](Protocol):
     def __lt__(self, other: T, /) -> bool: ...
@@ -10,5 +12,3 @@ class SupportsDunderGT[T](Protocol):
 
 
 type SupportsRichComparison[T] = SupportsDunderLT[T] | SupportsDunderGT[T]
-
-__all__ = 'SupportsDunderLT', 'SupportsDunderGT', 'SupportsRichComparison'

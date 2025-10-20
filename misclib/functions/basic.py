@@ -1,6 +1,8 @@
 from collections.abc import Collection, Iterable
 from traceback import format_tb
 
+__all__ = 'format_exception', 'truncate_string', 'repr_collection'
+
 
 def format_exception(exc: BaseException, /) -> str:
     """
@@ -58,6 +60,3 @@ def repr_collection[T: (str, Iterable[str])](
     """
     func = repr if use_repr else str
     return singular if len(c) == 1 else plural, delimiter.join(func(o) for o in c)
-
-
-__all__ = 'format_exception', 'truncate_string', 'repr_collection'

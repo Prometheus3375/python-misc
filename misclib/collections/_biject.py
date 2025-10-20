@@ -2,6 +2,8 @@ from collections.abc import Iterable, Iterator, Mapping, MappingView, Set
 from sys import getsizeof
 from typing import Generic, Optional, TypeVar, Union, overload
 
+__all__ = 'PairsView', 'AbstractBijectiveMap', 'BijectiveMap', 'FrozenBijectiveMap'
+
 T1 = TypeVar('T1')
 T2 = TypeVar('T2')
 V = Union[T1, T2]
@@ -226,6 +228,3 @@ class FrozenBijectiveMap(AbstractBijectiveMap[T1_co, T2_co]):
 
     def __sizeof__(self, /):
         return super().__sizeof__() + getsizeof(self._hash)
-
-
-__all__ = 'PairsView', 'AbstractBijectiveMap', 'BijectiveMap', 'FrozenBijectiveMap'

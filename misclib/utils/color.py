@@ -2,6 +2,8 @@ from typing import Any, Self, TypedDict
 
 from misclib.functions.indexing import max_with_index
 
+__all__ = 'Color', 'ColorMap',
+
 int_float = int, float
 
 
@@ -382,6 +384,3 @@ class Color:
 
     from_hsb = from_hsv
     hsb = hsv
-
-
-__all__ = 'Color', 'ColorMap',

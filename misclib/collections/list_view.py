@@ -2,6 +2,8 @@ import sys
 from collections.abc import Iterator, Sequence
 from typing import Any, overload
 
+__all__ = 'ListView', 'ListOrView'
+
 type ListOrView[T] = list[T] | ListView[T]
 
 
@@ -95,6 +97,3 @@ class ListView[T]:
 
     def __le__(self, other: ListOrView, /) -> bool:
         return self._source <= other
-
-
-__all__ = 'ListView', 'ListOrView'

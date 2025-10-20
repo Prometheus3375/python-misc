@@ -1,6 +1,8 @@
 from typing import Any, Never, final
 from weakref import WeakValueDictionary
 
+__all__ = 'CombineMeta', 'Singleton', 'EmptySlots'
+
 bases2combined = WeakValueDictionary()
 """
 Maps a tuple of base classes to the respective subclass.
@@ -215,6 +217,3 @@ class EmptySlots(type, metaclass=CombineMeta):
             namespace['__slots__'] = ()
 
         return super().__new__(mcs, name, bases, namespace, **kwargs)
-
-
-__all__ = 'CombineMeta', 'Singleton', 'EmptySlots'
