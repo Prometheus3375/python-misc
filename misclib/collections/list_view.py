@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Iterator, Sequence
 from typing import Any, overload
 
@@ -52,7 +53,7 @@ class ListView[T]:
         """
         return self._source.copy()
 
-    def index(self, value: T, start: int = 0, stop: int | None = None, /) -> int:
+    def index(self, value: T, start: int = 0, stop: int = sys.maxsize, /) -> int:
         """
         If a value is present in the wrapped list,
         returns an index of its first occurrence,
