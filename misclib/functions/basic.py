@@ -22,7 +22,7 @@ def format_exception(exc: BaseException, /) -> str:
 def truncate_string(value: str, limit: int = 10, /) -> str:
     """
     If the length of the given string is higher than the limit,
-    cuts it to ``limit - 3`` characters and appends ellipsis.
+    cuts it to ``limit - 3`` characters and appends the ellipsis.
     Returns the string unchanged otherwise.
     """
     return f'{value[:limit - 3]}...' if len(value) > limit else value
