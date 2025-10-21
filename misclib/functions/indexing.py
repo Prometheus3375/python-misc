@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Callable, Iterable, Sequence
 from operator import itemgetter
 from typing import overload
@@ -7,46 +8,19 @@ from misclib.protocols import SupportsRichComparison
 __all__ = 'binary_search', 'max_with_index', 'min_with_index', 'sorted_with_indices'
 
 
-@overload
 def binary_search[T: SupportsRichComparison](
         seq: Sequence[T],
         value: T,
+        start: int = 0,
         /,
-        ) -> int | None: ...
-
-
-@overload
-def binary_search[T: SupportsRichComparison](
-        seq: Sequence[T],
-        value: T,
-        end: int,
-        /,
-        ) -> int | None: ...
-
-
-@overload
-def binary_search[T: SupportsRichComparison](
-        seq: Sequence[T],
-        value: T,
-        start: int,
-        end: int,
-        /,
-        ) -> int | None: ...
-
-
-def binary_search[T: SupportsRichComparison](
-        seq: Sequence[T],
-        value: T,
-        start: int | None = None,
-        end: int | None = None,
-        /,
-        ) -> int | None:
+        stop: int = sys.maxsize,
+        ) -> int:
     """
     Searches for the given value in the given **sorted** sequence.
-    If the value is present, then returns an index where this value is stored,
-    or ``None`` otherwise.
+    If the value is present, then returns any index where this value is stored,
+    or ``-1`` otherwise.
 
-    Parameters ``start`` and ``end`` specify a slice of this sequence
+    Parameters ``start`` and ``stop`` specify a slice of this sequence
     where the search is done without creating an actual slice.
 
     >>> from misclib.functions.indexing import binary_search
@@ -54,9 +28,9 @@ def binary_search[T: SupportsRichComparison](
     >>> binary_search(li, 4)
     3
     >>> binary_search(li, 0)
-
-    >>> binary_search(li, 4, 3)
-
+    -1
+    >>> binary_search(li, 4, stop=3)
+    -1
     >>> binary_search(li, 4, 3, 5)
     3
     >>> li = [1, 2, 3, 3, 4, 5]
@@ -66,33 +40,19 @@ def binary_search[T: SupportsRichComparison](
     >>> binary_search(li, 2)
     1
     """
-    if start is None and end is None:
-        # Both are unspecified - use whole sequence
-        start = 0
-        end = len(seq)
-    elif end is None:
-        # Start is specified, end is not - use start as end, 0 as start
-        end = start
-        start = 0
-    elif start is None:
-        # End is specified, start is not - emit error
-        raise ValueError('cannot specify ending index without a starting one')
-
-    if start < 0 or end > len(seq):
-        raise ValueError(f'search region must be within sequence length, got {start=} and {end=}')
-
-    while start < end:
-        mid = start + (end - start) // 2
+    start, stop, _ = slice(start, stop).indices(len(seq))
+    while start < stop:
+        mid = start + (stop - start) // 2
         mid_value = seq[mid]
         if value is mid_value or value == mid_value:
             return mid
 
         if value < mid_value:
-            end = mid
+            stop = mid
         else:
             start = mid + 1
 
-    return None
+    return -1
 
 
 type KeyFunc[T] = Callable[[T], SupportsRichComparison]
