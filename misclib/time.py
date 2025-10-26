@@ -59,7 +59,8 @@ def format_seconds(seconds: float, /) -> str:
     data = []
     for mul in DURATION_UNITS.values():
         value, seconds = divmod(seconds, mul)
-        data.append(round(value))
+        # Use int because value is always round.
+        data.append(int(value))
 
     return ' '.join(
         f'{value}{unit}'
