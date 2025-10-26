@@ -20,7 +20,7 @@ __all__ = (
     'CallableTimeTracker',
     )
 
-DURATION_UNIT_NAMES = 'yr', 'mo', 'wk', 'd', 'h', 'm', 's', 'ms', '	μs', 'ns'
+DURATION_UNIT_NAMES = 'yr', 'mo', 'wk', 'd', 'h', 'm', 's', 'ms', 'μs', 'ns'
 DURATION_UNITS = {
     'years':        60 * 60 * 24 * 365,
     'months':       60 * 60 * 24 * 30,
