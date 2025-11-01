@@ -1,9 +1,5 @@
 # PyCharm
-.idea/
+/.idea/
 
 # Common
 __pycache__/
-venv/
-
-# Project
-test.py
