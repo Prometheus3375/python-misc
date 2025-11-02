@@ -21,6 +21,14 @@ def format_exception(exc: BaseException, /) -> str:
     return f'{exc_name}: {exc}'
 
 
+def purge_spaces(value: str, /) -> str:
+    """
+    Replaces space sequences in the given string
+    with a single space and removes trailing spaces.
+    """
+    return ' '.join(value.split())
+
+
 def truncate_string(value: str, limit: int = 10, /) -> str:
     """
     If the length of the given string is higher than the limit,
