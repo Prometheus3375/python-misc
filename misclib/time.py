@@ -131,7 +131,7 @@ def track_time[** P, R](
 
     :param func: A function to decorate.
       Can be omitted when other parameters specified and
-      this decorator is used via special decorator syntax
+      this decorator is used via special decorator syntax.
     :param msg_fmt: The format of the logged string,
       must contain one positional format parameter for the time entry.
     :param log: The callable for logging the message with the time entry in the given format.

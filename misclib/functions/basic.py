@@ -32,7 +32,7 @@ def purge_spaces(value: str, /) -> str:
 def truncate_string(value: str, limit: int = 10, /) -> str:
     """
     If the length of the given string is higher than the limit,
-    cuts it to ``limit - 3`` characters and appends the ellipsis.
+    cuts it to `limit - 3` characters and appends the ellipsis.
     Returns the string unchanged otherwise.
     """
     return f'{value[:limit - 3]}...' if len(value) > limit else value
@@ -62,8 +62,8 @@ def repr_collection[T: (str, Iterable[str])](
       If ``False``, function ``str`` is used instead.
       Defaults to ``True``.
     :return: A tuple of size 2.
-      The first element is ``singular``
-      if the collection contains one element and ``plural`` otherwise.
+      The first element is `singular`
+      if the collection contains one element and `plural` otherwise.
       The second element is the final string representation of the collection.
     """
     func = repr if use_repr else str

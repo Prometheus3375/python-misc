@@ -20,7 +20,7 @@ def binary_search[T: SupportsRichComparison](
     If the value is present, then returns any index where this value is stored,
     or ``-1`` otherwise.
 
-    Parameters ``start`` and ``stop`` specify a slice of this sequence
+    Parameters `start` and `stop` specify a slice of this sequence
     where the search is done without creating an actual slice.
 
     >>> from misclib.functions.indexing import binary_search
@@ -126,7 +126,7 @@ def max_with_index[T, D](
     """
     With a single :class:`Iterable` argument,
     returns its greatest item and the zero-based position of this item.
-    The iterable cannot be empty unless parameter ``default`` is provided;
+    The iterable cannot be empty unless `default` is provided;
     in such case returns the value of this parameter.
 
     >>> from misclib.functions.indexing import max_with_index
@@ -222,7 +222,7 @@ def min_with_index[T, D](
     """
     With a single :class:`Iterable` argument,
     returns its least item and the zero-based position of this item.
-    The iterable cannot be empty unless parameter ``default`` is provided;
+    The iterable cannot be empty unless `default` is provided;
     in such case returns the value of this parameter.
 
     >>> from misclib.functions.indexing import min_with_index
